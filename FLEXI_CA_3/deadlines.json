@@ -1,0 +1,49 @@
+[
+    {
+        "id": 2,
+        "student_name": "rahul",
+        "subject": "dc",
+        "assignment_name": "quiz",
+        "deadline": "2026-09-03",
+        "chat_id": "7062551196",
+        "reminder_days": 1,
+        "completed": true,
+        "reminder_sent": true,
+        "today_reminder_sent": true
+    },
+    {
+        "id": 3,
+        "student_name": "ram",
+        "subject": "cn",
+        "assignment_name": "assignment submission",
+        "deadline": "2026-09-05",
+        "chat_id": "7062551196",
+        "reminder_days": 1,
+        "completed": false,
+        "reminder_sent": true
+    },
+    {
+        "id": 4,
+        "student_name": "Arjun",
+        "subject": "OS",
+        "assignment_name": "Quiz",
+        "deadline": "2026-09-16",
+        "chat_id": "7062551196",
+        "reminder_days": 1,
+        "completed": false,
+        "reminder_sent": false,
+        "today_reminder_sent": true
+    },
+    {
+        "id": 5,
+        "student_name": "Sid",
+        "subject": "CO",
+        "assignment_name": "Written Assignment",
+        "deadline": "2026-09-17",
+        "chat_id": "7062551196",
+        "reminder_days": 2,
+        "completed": false,
+        "reminder_sent": false,
+        "today_reminder_sent": true
+    }
+]
