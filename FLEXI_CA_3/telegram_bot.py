@@ -3,7 +3,7 @@ from telegram import Bot
 from dotenv import load_dotenv
 
 
-load_dotenv("example1.env")
+load_dotenv("example.env")
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 

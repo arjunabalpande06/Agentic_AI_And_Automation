@@ -12,7 +12,7 @@ from telegram_bot import send_telegram_message
 # =========================================================
 
 DATA_FILE = "deadlines.json"
-CHAT_ID_FILE = "example1.env"
+CHAT_ID_FILE = "example.env"
 
 
 # =========================================================
