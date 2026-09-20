@@ -1,32 +1,14 @@
 import json
 import os
 import asyncio
-
 from datetime import datetime, date
 
-from telegram_bot import send_telegram_message
-
-
-DATA_FILE = "deadlines.json"
-
-
-def load_deadlines():
-
-    if not os.path.exists(DATA_FILE):
-        return []
-
-    with open(DATA_FILE, "r") as file:
-        return json.load(file)
-
-
-def save_deadlines(data):
-
-    with open(DATA_FILE, "w") as file:
-        json.dump(
-            data,
-            file,
-            indent=4
-        )
+try:
+    from telegram_bot import send_telegram_message
+    from database import load_deadlines, save_deadlines
+except ImportError:
+    from FLEXI_CA_3.telegram_bot import send_telegram_message
+    from FLEXI_CA_3.database import load_deadlines, save_deadlines
 
 
 async def check_deadlines():

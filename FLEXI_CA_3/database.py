@@ -1,69 +1,133 @@
-import sqlite3
+import os
+import json
+import shutil
+import urllib.request
+import urllib.error
 
-DATABASE_NAME = "reminders.db"
+# Determine file paths for local / serverless fallback
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_BUNDLED_FILE = os.path.join(BASE_DIR, "deadlines.json")
 
 
-def create_database():
-    connection = sqlite3.connect(DATABASE_NAME)
+def get_data_file_path():
+    """Returns a writable path for serverless environments or local storage."""
+    if os.getenv("VERCEL"):
+        tmp_path = "/tmp/deadlines.json"
+        # Seed initial data from bundled deadlines.json if not present
+        if not os.path.exists(tmp_path) and os.path.exists(DEFAULT_BUNDLED_FILE):
+            try:
+                shutil.copyfile(DEFAULT_BUNDLED_FILE, tmp_path)
+            except OSError:
+                pass
+        return tmp_path
 
-    cursor = connection.cursor()
+    if os.path.exists("deadlines.json"):
+        return "deadlines.json"
+    return DEFAULT_BUNDLED_FILE
 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reminders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            task TEXT NOT NULL,
-            deadline TEXT NOT NULL
+
+# -------------------------------------------------------------
+# UPSTASH REDIS (REST API - Free Serverless KV)
+# -------------------------------------------------------------
+
+def _load_from_upstash(url, token):
+    try:
+        req = urllib.request.Request(
+            f"{url.rstrip('/')}/get/deadlines",
+            headers={"Authorization": f"Bearer {token}"}
         )
-    """)
-
-    connection.commit()
-    connection.close()
-
-
-def add_reminder(student_name, email, task, deadline):
-    connection = sqlite3.connect(DATABASE_NAME)
-
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        INSERT INTO reminders
-        (student_name, email, task, deadline)
-        VALUES (?, ?, ?, ?)
-    """, (student_name, email, task, deadline))
-
-    connection.commit()
-    connection.close()
+        with urllib.request.urlopen(req, timeout=5) as response:
+            res = json.loads(response.read().decode())
+            result = res.get("result")
+            if result:
+                return json.loads(result) if isinstance(result, str) else result
+    except Exception as e:
+        print("Upstash load error:", e)
+    return None
 
 
-def get_reminders():
-    connection = sqlite3.connect(DATABASE_NAME)
+def _save_to_upstash(url, token, data):
+    try:
+        payload = json.dumps(["SET", "deadlines", json.dumps(data)]).encode()
+        req = urllib.request.Request(
+            url.rstrip("/"),
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            return response.status == 200
+    except Exception as e:
+        print("Upstash save error:", e)
+        return False
 
-    cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT id, student_name, email, task, deadline
-        FROM reminders
-        ORDER BY deadline
-    """)
+# -------------------------------------------------------------
+# PUBLIC LOAD / SAVE FUNCTIONS
+# -------------------------------------------------------------
 
-    data = cursor.fetchall()
+def load_deadlines():
+    """Loads deadlines from cloud database or local/tmp file."""
+    # 1. Check Upstash Redis
+    upstash_url = os.getenv("UPSTASH_REDIS_REST_URL")
+    upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+    if upstash_url and upstash_token:
+        cloud_data = _load_from_upstash(upstash_url, upstash_token)
+        if cloud_data is not None:
+            return cloud_data
 
-    connection.close()
+    # 2. Check MongoDB
+    mongo_uri = os.getenv("MONGODB_URI") or os.getenv("MONGO_URL")
+    if mongo_uri:
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
+            db = client.get_database("student_tracker")
+            docs = list(db.deadlines.find({}, {"_id": 0}))
+            if docs:
+                return docs
+        except Exception as e:
+            print("MongoDB load error:", e)
 
-    return data
+    # 3. File fallback
+    file_path = get_data_file_path()
+    if not os.path.exists(file_path):
+        return []
+
+    try:
+        with open(file_path, "r") as file:
+            return json.load(file)
+    except (json.JSONDecodeError, OSError):
+        return []
 
 
-def delete_reminder(reminder_id):
-    connection = sqlite3.connect(DATABASE_NAME)
+def save_deadlines(data):
+    """Saves deadlines to cloud database and local/tmp file."""
+    # 1. Upstash Redis
+    upstash_url = os.getenv("UPSTASH_REDIS_REST_URL")
+    upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+    if upstash_url and upstash_token:
+        _save_to_upstash(upstash_url, upstash_token, data)
 
-    cursor = connection.cursor()
+    # 2. MongoDB
+    mongo_uri = os.getenv("MONGODB_URI") or os.getenv("MONGO_URL")
+    if mongo_uri:
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
+            db = client.get_database("student_tracker")
+            db.deadlines.delete_many({})
+            if data:
+                db.deadlines.insert_many(data)
+        except Exception as e:
+            print("MongoDB save error:", e)
 
-    cursor.execute(
-        "DELETE FROM reminders WHERE id = ?",
-        (reminder_id,)
-    )
-
-    connection.commit()
-    connection.close()
+    # 3. File fallback
+    file_path = get_data_file_path()
+    try:
+        with open(file_path, "w") as file:
+            json.dump(data, file, indent=4)
+    except OSError as e:
+        print(f"File save error ({file_path}):", e)

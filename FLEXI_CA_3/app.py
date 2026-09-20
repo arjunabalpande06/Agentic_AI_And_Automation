@@ -4,60 +4,45 @@ import os
 import asyncio
 from datetime import datetime
 
-from telegram_bot import send_telegram_message
+try:
+    from telegram_bot import send_telegram_message
+    from database import load_deadlines, save_deadlines
+except ImportError:
+    from FLEXI_CA_3.telegram_bot import send_telegram_message
+    from FLEXI_CA_3.database import load_deadlines, save_deadlines
 
 
 # =========================================================
-# SETTINGS
-# =========================================================
-
-DATA_FILE = "deadlines.json"
-CHAT_ID_FILE = "example.env"
-
-
-# =========================================================
-# LOAD CHAT ID FROM FILE
+# LOAD CHAT ID
 # =========================================================
 
 def load_chat_id():
+    # 1. Check environment variable (Vercel & cloud platforms)
+    env_chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if env_chat_id and env_chat_id.strip():
+        return env_chat_id.strip()
 
-    try:
-        with open(CHAT_ID_FILE, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("TELEGRAM_CHAT_ID="):
-                    return line.split("=", 1)[1].strip()
-    except OSError:
-        pass
+    # 2. Local file fallbacks
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    for fname in [".env", "example.env", "Imp.txt"]:
+        fpath = os.path.join(base_dir, fname) if not os.path.exists(fname) else fname
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("TELEGRAM_CHAT_ID="):
+                            val = line.split("=", 1)[1].strip()
+                            if val:
+                                return val
+                        elif line.startswith("Chat ID:"):
+                            val = line.split(":", 1)[1].strip()
+                            if val:
+                                return val
+            except OSError:
+                pass
 
     return None
-
-
-# =========================================================
-# DATABASE FUNCTIONS
-# =========================================================
-
-def load_deadlines():
-
-    if not os.path.exists(DATA_FILE):
-        return []
-
-    try:
-        with open(DATA_FILE, "r") as file:
-            return json.load(file)
-
-    except (json.JSONDecodeError, OSError):
-        return []
-
-
-def save_deadlines(data):
-
-    with open(DATA_FILE, "w") as file:
-        json.dump(
-            data,
-            file,
-            indent=4
-        )
 
 
 # =========================================================
@@ -432,9 +417,7 @@ through Telegram.
         )
 
 
-# =========================================================
-# START APPLICATION
-# =========================================================
+app_fastapi = app.app
 
 if __name__ == "__main__":
 
