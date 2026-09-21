@@ -1,17 +1,5 @@
 [
     {
-        "id": 2,
-        "student_name": "rahul",
-        "subject": "dc",
-        "assignment_name": "quiz",
-        "deadline": "2026-09-03",
-        "chat_id": "7062551196",
-        "reminder_days": 1,
-        "completed": true,
-        "reminder_sent": true,
-        "today_reminder_sent": true
-    },
-    {
         "id": 3,
         "student_name": "ram",
         "subject": "cn",
@@ -21,30 +9,6 @@
         "reminder_days": 1,
         "completed": false,
         "reminder_sent": true
-    },
-    {
-        "id": 4,
-        "student_name": "Arjun",
-        "subject": "OS",
-        "assignment_name": "Quiz",
-        "deadline": "2026-09-16",
-        "chat_id": "7062551196",
-        "reminder_days": 1,
-        "completed": false,
-        "reminder_sent": false,
-        "today_reminder_sent": true
-    },
-    {
-        "id": 5,
-        "student_name": "Sid",
-        "subject": "CO",
-        "assignment_name": "Written Assignment",
-        "deadline": "2026-09-17",
-        "chat_id": "7062551196",
-        "reminder_days": 2,
-        "completed": false,
-        "reminder_sent": false,
-        "today_reminder_sent": true
     },
     {
         "id": 6,
@@ -58,11 +22,28 @@
         "reminder_sent": true
     },
     {
-        "id": 7,
-        "student_name": "shubham",
-        "subject": "CC",
-        "assignment_name": "Quiz",
+        "id": 8,
+        "student_name": "Arjun",
+        "subject": "Assignment",
+        "assignment_name": "Submit Python assignment",
+        "deadline": "2026-09-25",
+        "time": "18:00",
+        "category": "Assignment",
+        "description": "",
+        "chat_id": "7062551196",
+        "reminder_days": 1,
+        "completed": false,
+        "reminder_sent": false
+    },
+    {
+        "id": 9,
+        "student_name": "Aadi",
+        "subject": "Assignment",
+        "assignment_name": "Submit Machine Learning lab report",
         "deadline": "2026-09-22",
+        "time": "17:00",
+        "category": "Assignment",
+        "description": "",
         "chat_id": "7062551196",
         "reminder_days": 1,
         "completed": false,

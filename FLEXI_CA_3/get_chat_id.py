@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -7,7 +8,17 @@ from telegram.ext import (
     filters
 )
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+for env_name in [".env", "example.env"]:
+    env_path = os.path.join(base_dir, env_name)
+    if os.path.exists(env_path):
+        load_dotenv(env_path, override=False)
+load_dotenv(override=False)
+
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+if not BOT_TOKEN:
+    print("❌ Error: TELEGRAM_BOT_TOKEN is not set in your .env file.")
+    exit(1)
 
 
 async def get_chat_id(
