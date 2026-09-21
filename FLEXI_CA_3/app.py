@@ -17,7 +17,7 @@ except ImportError:
 # =========================================================
 
 def load_chat_id():
-    # 1. Check environment variable (Vercel & cloud platforms)
+    # 1. Check environment variable
     env_chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if env_chat_id and env_chat_id.strip():
         return env_chat_id.strip()
@@ -415,9 +415,6 @@ through Telegram.
             inputs=delete_id,
             outputs=delete_output
         )
-
-
-app_fastapi = app.app
 
 if __name__ == "__main__":
 
